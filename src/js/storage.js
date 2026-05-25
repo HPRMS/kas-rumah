@@ -1,10 +1,10 @@
 /**
  * storage.js
- * Di HP (native)  : baca/tulis file transaksi.json ke Documents folder HP
+ * Di HP (native)  : baca/tulis file transaksi.json ke App folder HP
  * Di browser      : fallback ke localStorage
  *
  * File di HP tersimpan di:
- *   /storage/emulated/0/Documents/KasRumah/transaksi.json
+ *   /storage/emulated/0/App/KasRumah/transaksi.json
  *   (bisa dilihat di File Manager HP)
  */
 
@@ -30,14 +30,14 @@ const Storage = (() => {
         try {
           await Filesystem.mkdir({
             path: FOLDER,
-            directory: Directory.Documents,
+            directory: Directory.App,
             recursive: true
           });
         } catch (e) {
           // Folder sudah ada, tidak masalah
         }
 
-        setStatus('🟢 File JSON tersimpan di Documents/KasRumah/');
+        setStatus('🟢 File JSON tersimpan di App/KasRumah/');
         console.log('[Storage] Filesystem native siap');
       } catch (err) {
         isNative = false;
@@ -62,7 +62,7 @@ const Storage = (() => {
       try {
         const result = await Filesystem.readFile({
           path: `${FOLDER}/${FILE_NAME}`,
-          directory: Directory.Documents,
+          directory: Directory.App,
           encoding: 'utf8'
         });
         return JSON.parse(result.data) || [];
@@ -82,7 +82,7 @@ const Storage = (() => {
     if (isNative) {
       await Filesystem.writeFile({
         path: `${FOLDER}/${FILE_NAME}`,
-        directory: Directory.Documents,
+        directory: Directory.App,
         data: json,
         encoding: 'utf8',
         recursive: true
@@ -114,7 +114,7 @@ const Storage = (() => {
   // Kembalikan path file untuk ditampilkan ke user
   function filePath() {
     return isNative
-      ? 'Documents/KasRumah/transaksi.json'
+      ? 'App/KasRumah/transaksi.json'
       : 'localStorage (browser)';
   }
 
