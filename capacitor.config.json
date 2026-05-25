@@ -1,0 +1,8 @@
+{
+  "appId": "com.kasrumah.app",
+  "appName": "Kas Rumah",
+  "webDir": "src",
+  "server": {
+    "androidScheme": "https"
+  }
+}

@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0f172a">
+  <title>Kas Rumah</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="app">
+
+  <header class="header">
+    <div class="header-top">
+      <div>
+        <p class="header-sub">Selamat datang 👋</p>
+        <h1 class="header-title">Kas Rumah</h1>
+      </div>
+      <div class="saldo-chip">
+        <span class="saldo-label">Saldo</span>
+        <span class="saldo-val" id="header-saldo">Rp 0</span>
+      </div>
+    </div>
+    <div class="metric-row">
+      <div class="metric-card inc-card">
+        <span class="metric-icon">↑</span>
+        <div><p class="metric-label">Pemasukan</p><p class="metric-val" id="total-inc">Rp 0</p></div>
+      </div>
+      <div class="metric-card exp-card">
+        <span class="metric-icon">↓</span>
+        <div><p class="metric-label">Pengeluaran</p><p class="metric-val" id="total-exp">Rp 0</p></div>
+      </div>
+    </div>
+  </header>
+
+  <div class="filter-bar">
+    <select id="filter-month" onchange="render()">
+      <option value="semua">Semua bulan</option>
+    </select>
+  </div>
+
+  <nav class="tab-nav">
+    <button class="tab-btn active" onclick="switchTab('ringkasan',this)">Ringkasan</button>
+    <button class="tab-btn" onclick="switchTab('tambah',this)">+ Tambah</button>
+    <button class="tab-btn" onclick="switchTab('riwayat',this)">Riwayat</button>
+    <button class="tab-btn" onclick="switchTab('backup',this)">Backup</button>
+  </nav>
+
+  <section id="tab-ringkasan" class="tab-section active">
+    <p class="section-label">Pengeluaran per kategori</p>
+    <div id="cat-bars"></div>
+  </section>
+
+  <section id="tab-tambah" class="tab-section">
+    <div class="form-card">
+      <div class="type-toggle">
+        <button class="type-btn active" id="btn-inc" onclick="setType('inc')">↑ Pemasukan</button>
+        <button class="type-btn" id="btn-exp" onclick="setType('exp')">↓ Pengeluaran</button>
+      </div>
+      <div class="form-group">
+        <label>Keterangan</label>
+        <input type="text" id="f-desc" placeholder="Contoh: Gaji bulan ini...">
+      </div>
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>Jumlah (Rp)</label>
+          <input type="number" id="f-amount" placeholder="0" min="0">
+        </div>
+        <div class="form-group">
+          <label>Tanggal</label>
+          <input type="date" id="f-date">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Kategori</label>
+        <select id="f-cat"></select>
+      </div>
+      <button class="btn-simpan" onclick="addTx()">Simpan Transaksi</button>
+    </div>
+  </section>
+
+  <section id="tab-riwayat" class="tab-section">
+    <div id="tx-list"></div>
+  </section>
+
+  <section id="tab-backup" class="tab-section">
+    <div class="backup-info">
+      <span>📄</span>
+      <div>
+        <p>Data tersimpan sebagai file JSON di storage HP.</p>
+        <p class="db-status" id="db-status">Menginisialisasi...</p>
+        <p class="file-path" id="file-path"></p>
+      </div>
+    </div>
+
+    <p class="section-label">Backup & Restore</p>
+    <div class="backup-card" onclick="exportData()">
+      <div class="backup-icon" style="background:rgba(52,211,153,0.15)">💾</div>
+      <div class="backup-text">
+        <strong>Export backup</strong>
+        <span>Download salinan file JSON</span>
+      </div>
+      <span class="backup-arrow">→</span>
+    </div>
+    <div class="backup-card" onclick="importData()">
+      <div class="backup-icon" style="background:rgba(96,165,250,0.15)">📂</div>
+      <div class="backup-text">
+        <strong>Import dari file</strong>
+        <span>Pulihkan dari file JSON</span>
+      </div>
+      <span class="backup-arrow">→</span>
+    </div>
+
+    <p class="section-label" style="margin-top:1.5rem">Info penyimpanan</p>
+    <div class="tips-list">
+      <div class="tip-item">✅ File JSON ada di Documents/KasRumah/ di HP</div>
+      <div class="tip-item">✅ Bisa dibuka & dilihat di File Manager HP</div>
+      <div class="tip-item">✅ Tidak hilang meski clear cache</div>
+      <div class="tip-item">✅ Bisa di-copy / backup ke Google Drive</div>
+    </div>
+  </section>
+
+</div>
+
+<div id="toast" class="toast"></div>
+<div id="loading" class="loading-screen">
+  <div class="loading-inner">
+    <div class="loading-icon">💰</div>
+    <p>Membuka Kas Rumah...</p>
+  </div>
+</div>
+
+<input type="file" id="import-input" accept=".json" style="display:none" onchange="handleImport(event)">
+
+<script src="js/storage.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
