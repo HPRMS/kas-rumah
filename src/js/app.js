@@ -1,8 +1,8 @@
 const CATS_INC = ['Gaji','Usaha','Bonus','Transfer Masuk','Lainnya'];
-const CATS_EXP = ['Makanan','Transportasi','Listrik & Air','Sewa','Kesehatan','Pendidikan','Belanja','Hiburan','Cicilan','Lainnya'];
+const CATS_EXP = ['Makanan','Transportasi','Listrik','Pajak','Kesehatan','Pendidikan','Belanja','Hiburan','Cicilan','Lainnya'];
 const EMOJIS = {
   'Gaji':'💼','Usaha':'🏪','Bonus':'🎁','Transfer Masuk':'📥',
-  'Makanan':'🍽️','Transportasi':'🚗','Listrik & Air':'💡','Sewa':'🏠',
+  'Makanan':'🍽️','Transportasi':'🚗','Listrik':'💡','Pajak':'🏠',
   'Kesehatan':'❤️','Pendidikan':'📚','Belanja':'🛒','Hiburan':'🎬',
   'Cicilan':'💳','Lainnya':'📌'
 };
