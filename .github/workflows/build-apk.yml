@@ -1,0 +1,73 @@
+name: Build APK
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:  # bisa trigger manual dari GitHub
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+
+      # 1. Ambil kode dari repo
+      - name: Checkout kode
+        uses: actions/checkout@v4
+
+      # 2. Setup Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      # 3. Install dependencies (Capacitor dll)
+      - name: Install dependencies
+        run: npm install
+
+      # 4. Setup Java (dibutuhkan Android build)
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      # 5. Setup Android SDK
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      # 6. Tambah platform Android (kalau belum ada)
+      - name: Add Android platform
+        run: |
+          if [ ! -d "android" ]; then
+            npx cap add android
+          fi
+
+      # 7. Sync kode web ke Android project
+      - name: Sync Capacitor
+        run: npx cap sync android
+
+      # 8. Tambah permission filesystem di AndroidManifest
+      - name: Patch AndroidManifest permissions
+        run: |
+          MANIFEST="android/app/src/main/AndroidManifest.xml"
+          # Tambah READ permission kalau belum ada
+          if ! grep -q "READ_EXTERNAL_STORAGE" "$MANIFEST"; then
+            sed -i 's|<uses-permission android:name="android.permission.INTERNET"/>|<uses-permission android:name="android.permission.INTERNET"/>\n    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>\n    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29"/>|' "$MANIFEST"
+          fi
+
+      # 9. Build APK debug
+      - name: Build APK
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      # 10. Upload APK sebagai artifact (bisa didownload)
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: kas-rumah-debug
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 30  # tersimpan 30 hari
