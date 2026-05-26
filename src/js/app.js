@@ -174,62 +174,48 @@ function switchTab(name, el) {
 //   URL.revokeObjectURL(url);
 //   showToast('Backup diunduh! 💾');
 // }
-async function exportData(){
+async function exportData() {
+  const json = JSON.stringify({ version:1, exported: new Date().toISOString(), data: allTxs }, null, 2);
+  const fileName = `kas-rumah-backup-${new Date().toISOString().slice(0,10)}.json`;
 
-try{
+  // Kalau jalan di Capacitor native (APK)
+  if (window.Capacitor?.isNativePlatform?.()) {
+    try {
+      const { Filesystem, Directory } = await import('https://cdn.jsdelivr.net/npm/@capacitor/filesystem@5/dist/esm/index.js');
 
-if(
-!window.Capacitor ||
-!Capacitor.Plugins ||
-!Capacitor.Plugins.Filesystem
-){
-alert('Filesystem plugin tidak terdeteksi');
-return;
-}
+      // Pastikan folder ada
+      try {
+        await Filesystem.mkdir({
+          path: 'KasRumah',
+          directory: Directory.Documents,
+          recursive: true
+        });
+      } catch(e) {} // folder sudah ada, tidak masalah
 
-const file=
-`kas-rumah-${
-new Date()
-.toLocaleString('sv-SE')
-.replace(/[ :]/g,'-')
-}.json`;
+      // Tulis file
+      await Filesystem.writeFile({
+        path: `KasRumah/${fileName}`,
+        directory: Directory.Documents,
+        data: json,
+        encoding: 'utf8'
+      });
 
-await Capacitor.Plugins.Filesystem.writeFile({
+      showToast('Tersimpan di Documents/KasRumah/ 💾');
+    } catch (err) {
+      showToast('Gagal simpan: ' + err.message);
+    }
 
-path:
-`App/DB_backup/${file}`,
-
-data:
-JSON.stringify({
-version:1,
-exported:
-new Date().toISOString(),
-data
-},null,2),
-
-directory:
-'DOCUMENTS',
-
-recursive:true
-
-});
-
-showToast(
-'Backup berhasil 💾'
-);
-
-}
-catch(err){
-
-alert(
-err?.message ||
-JSON.stringify(err)
-);
-
-console.log(err);
-
-}
-
+  // Kalau jalan di browser biasa
+  } else {
+    const blob = new Blob([json], { type: 'application/json' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = fileName;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('Backup diunduh! 💾');
+  }
 }
 
 // function importData() {
