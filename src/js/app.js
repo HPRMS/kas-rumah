@@ -163,43 +163,167 @@ function switchTab(name, el) {
 
 // ── Backup / Import ───────────────────────────────────────────────────────
 
-function exportData() {
-  const json = JSON.stringify({ version:1, exported: new Date().toISOString(), data: allTxs }, null, 2);
-  const blob = new Blob([json], { type: 'application/json' });
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a');
-  a.href     = url;
-  a.download = `kas-rumah-backup-${new Date().toISOString().slice(0,10)}.json`;
-  a.click();
-  URL.revokeObjectURL(url);
-  showToast('Backup diunduh! 💾');
+// function exportData() {
+//   const json = JSON.stringify({ version:1, exported: new Date().toISOString(), data: allTxs }, null, 2);
+//   const blob = new Blob([json], { type: 'application/json' });
+//   const url  = URL.createObjectURL(blob);
+//   const a    = document.createElement('a');
+//   a.href     = url;
+//   a.download = `kas-rumah-backup-${new Date().toISOString().slice(0,10)}.json`;
+//   a.click();
+//   URL.revokeObjectURL(url);
+//   showToast('Backup diunduh! 💾');
+// }
+async function exportData(){
+
+try{
+
+const file =
+`kas-rumah-backup-${
+new Date()
+.toLocaleString('sv-SE')
+.replace(/[\s:]/g,'-')
+}.json`;
+
+await Capacitor.Plugins.Filesystem.writeFile({
+
+path:
+`App/DB_backup/${file}`,
+
+data:
+JSON.stringify(
+{
+version:1,
+exported:new Date().toISOString(),
+data:allTxs
+},
+null,
+2
+),
+
+directory:
+Capacitor.Plugins.FilesystemDirectory.Documents,
+
+recursive:true,
+
+encoding:'utf8'
+
+});
+
+showToast(
+'Backup tersimpan 💾'
+);
+
+}
+catch(err){
+
+console.error(err);
+
+showToast(
+'Backup gagal ❌'
+);
+
+}
+
 }
 
 function importData() {
   document.getElementById('import-input').click();
 }
 
-async function handleImport(e) {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = async ev => {
-    try {
-      const parsed   = JSON.parse(ev.target.result);
-      const imported = parsed.data || parsed;
-      if (!Array.isArray(imported)) throw new Error('Format tidak valid');
-      if (!confirm(`Import ${imported.length} transaksi?\nData lama akan diganti.`)) return;
-      await Storage.replaceAll(imported);
-      allTxs = await Storage.load();
-      updateMonthOptions();
-      render();
-      showToast(`${imported.length} transaksi diimport! ✅`);
-    } catch (err) {
-      alert('File tidak valid: ' + err.message);
-    }
-  };
-  reader.readAsText(file);
-  e.target.value = '';
+// async function handleImport(e) {
+//   const file = e.target.files[0];
+//   if (!file) return;
+//   const reader = new FileReader();
+//   reader.onload = async ev => {
+//     try {
+//       const parsed   = JSON.parse(ev.target.result);
+//       const imported = parsed.data || parsed;
+//       if (!Array.isArray(imported)) throw new Error('Format tidak valid');
+//       if (!confirm(`Import ${imported.length} transaksi?\nData lama akan diganti.`)) return;
+//       await Storage.replaceAll(imported);
+//       allTxs = await Storage.load();
+//       updateMonthOptions();
+//       render();
+//       showToast(`${imported.length} transaksi diimport! ✅`);
+//     } catch (err) {
+//       alert('File tidak valid: ' + err.message);
+//     }
+//   };
+//   reader.readAsText(file);
+//   e.target.value = '';
+// }
+async function handleImport(){
+
+try{
+
+const result =
+await Capacitor.Plugins.FilePicker.pickFiles({
+types:['application/json']
+});
+
+if(
+!result.files ||
+!result.files.length
+){
+return;
+}
+
+const file =
+result.files[0];
+
+const read =
+await Capacitor.Plugins.Filesystem.readFile({
+
+path:
+file.path
+
+});
+
+const parsed =
+JSON.parse(
+read.data
+);
+
+const imported =
+parsed.data ||
+parsed;
+
+if(
+!imported
+){
+throw 'invalid';
+}
+if(
+!confirm(
+'Import data? Data sekarang akan diganti.'
+)
+){
+return;
+}
+
+allTxs =
+imported;
+
+saveData();
+
+renderAll();
+
+showToast(
+'Import berhasil ✅'
+);
+
+}
+catch(err){
+
+console.error(
+err
+);
+
+showToast(
+'Import dibatalkan'
+);
+}
 }
 
 // ── Toast ─────────────────────────────────────────────────────────────────
