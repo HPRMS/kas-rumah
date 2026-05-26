@@ -1,4 +1,3 @@
-import { Filesystem, Directory } from '@capacitor/filesystem';
 const CATS_INC = ['Gaji','Usaha','Bonus','Transfer Masuk','Lainnya'];
 const CATS_EXP = ['Makanan','Transportasi','Listrik','Pajak','Kesehatan','Pendidikan','Belanja','Hiburan','Cicilan','Lainnya'];
 const EMOJIS = {
@@ -186,38 +185,28 @@ new Date()
 .replace(/[\s:]/g,'-')
 }.json`;
 
-await Filesystem.writeFile({
+await Capacitor.Filesystem.writeFile({
 
-path:
-`App/DB_backup/${file}`,
+path:`App/DB_backup/${file}`,
 
-data:
-JSON.stringify({
+data:JSON.stringify({
 version:1,
-exported:
-new Date().toISOString(),
+exported:new Date().toISOString(),
 data:allTxs
 },null,2),
 
-directory:
-Directory.Documents,
+directory:'DOCUMENTS',
 
 recursive:true
 
 });
 
-showToast(
-'Backup berhasil 💾'
-);
+showToast('Backup berhasil 💾');
 
 }
 catch(err){
 
-console.log(err);
-
-showToast(
-'Backup gagal ❌'
-);
+alert(JSON.stringify(err));
 
 }
 
