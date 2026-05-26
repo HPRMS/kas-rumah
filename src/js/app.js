@@ -1,3 +1,4 @@
+import { Filesystem, Directory } from '@capacitor/filesystem';
 const CATS_INC = ['Gaji','Usaha','Bonus','Transfer Masuk','Lainnya'];
 const CATS_EXP = ['Makanan','Transportasi','Listrik','Pajak','Kesehatan','Pendidikan','Belanja','Hiburan','Cicilan','Lainnya'];
 const EMOJIS = {
@@ -178,46 +179,41 @@ async function exportData(){
 
 try{
 
-const file =
-`kas-rumah-backup-${
+const file=
+`kas-rumah-${
 new Date()
 .toLocaleString('sv-SE')
 .replace(/[\s:]/g,'-')
 }.json`;
 
-await Capacitor.Plugins.Filesystem.writeFile({
+await Filesystem.writeFile({
 
 path:
 `App/DB_backup/${file}`,
 
 data:
-JSON.stringify(
-{
+JSON.stringify({
 version:1,
-exported:new Date().toISOString(),
+exported:
+new Date().toISOString(),
 data:allTxs
-},
-null,
-2
-),
+},null,2),
 
 directory:
-Capacitor.Plugins.FilesystemDirectory.Documents,
+Directory.Documents,
 
-recursive:true,
-
-encoding:'utf8'
+recursive:true
 
 });
 
 showToast(
-'Backup tersimpan 💾'
+'Backup berhasil 💾'
 );
 
 }
 catch(err){
 
-console.error(err);
+console.log(err);
 
 showToast(
 'Backup gagal ❌'
@@ -258,29 +254,29 @@ async function importData(){
 
 try{
 
-const result =
-await Capacitor.Plugins.Filesystem.readdir({
+const list =
+await Filesystem.readdir({
 
-path:'App/DB_backup',
+path:
+'App/DB_backup',
 
 directory:
-Capacitor.Plugins.FilesystemDirectory
-.Documents
+Directory.Documents
 
 });
 
-if(!result.files.length){
+if(!list.files.length){
 
 showToast(
-'Tidak ada backup'
+'Backup kosong'
 );
 
 return;
 
 }
 
-const latest =
-result.files
+const file =
+list.files
 .sort(
 (a,b)=>
 b.name.localeCompare(
@@ -289,14 +285,13 @@ a.name
 )[0];
 
 const read =
-await Capacitor.Plugins.Filesystem.readFile({
+await Filesystem.readFile({
 
 path:
-`App/DB_backup/${latest.name}`,
+`App/DB_backup/${file.name}`,
 
 directory:
-Capacitor.Plugins.FilesystemDirectory
-.Documents
+Directory.Documents
 
 });
 
@@ -305,8 +300,9 @@ JSON.parse(
 read.data
 );
 
-data =
-parsed.data ||
+allTxs =
+parsed.data
+||
 parsed;
 
 saveData();
@@ -320,9 +316,7 @@ showToast(
 }
 catch(err){
 
-console.log(
-err
-);
+console.log(err);
 
 showToast(
 'Import gagal ❌'
