@@ -347,6 +347,29 @@ function showFilePicker(files) {
   });
 }
 
+async function handleImportBrowser(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async ev => {
+    try {
+      const parsed   = JSON.parse(ev.target.result);
+      const imported = parsed.data || parsed;
+      if (!Array.isArray(imported)) throw new Error('Format tidak valid');
+      if (!confirm(`Import ${imported.length} transaksi?\nData lama akan diganti.`)) return;
+      await Storage.replaceAll(imported);
+      allTxs = await Storage.load();
+      updateMonthOptions();
+      render();
+      showToast(`${imported.length} transaksi diimport! ✅`);
+    } catch (err) {
+      alert('File tidak valid: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+
 // ── Toast ─────────────────────────────────────────────────────────────────
 
 function showToast(msg) {
