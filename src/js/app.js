@@ -178,35 +178,55 @@ async function exportData(){
 
 try{
 
+if(
+!window.Capacitor ||
+!Capacitor.Plugins ||
+!Capacitor.Plugins.Filesystem
+){
+alert('Filesystem plugin tidak terdeteksi');
+return;
+}
+
 const file=
 `kas-rumah-${
 new Date()
 .toLocaleString('sv-SE')
-.replace(/[\s:]/g,'-')
+.replace(/[ :]/g,'-')
 }.json`;
 
-await Capacitor.Filesystem.writeFile({
+await Capacitor.Plugins.Filesystem.writeFile({
 
-path:`App/DB_backup/${file}`,
+path:
+`App/DB_backup/${file}`,
 
-data:JSON.stringify({
+data:
+JSON.stringify({
 version:1,
-exported:new Date().toISOString(),
-data:allTxs
+exported:
+new Date().toISOString(),
+data
 },null,2),
 
-directory:'DOCUMENTS',
+directory:
+'DOCUMENTS',
 
 recursive:true
 
 });
 
-showToast('Backup berhasil 💾');
+showToast(
+'Backup berhasil 💾'
+);
 
 }
 catch(err){
 
-alert(JSON.stringify(err));
+alert(
+err?.message ||
+JSON.stringify(err)
+);
+
+console.log(err);
 
 }
 
