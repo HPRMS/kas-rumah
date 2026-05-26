@@ -227,9 +227,9 @@ showToast(
 
 }
 
-function importData() {
-  document.getElementById('import-input').click();
-}
+// function importData() {
+//   document.getElementById('import-input').click();
+// }
 
 // async function handleImport(e) {
 //   const file = e.target.files[0];
@@ -253,30 +253,50 @@ function importData() {
 //   reader.readAsText(file);
 //   e.target.value = '';
 // }
-async function handleImport(){
+
+async function importData(){
 
 try{
 
 const result =
-await Capacitor.Plugins.FilePicker.pickFiles({
-types:['application/json']
+await Capacitor.Plugins.Filesystem.readdir({
+
+path:'App/DB_backup',
+
+directory:
+Capacitor.Plugins.FilesystemDirectory
+.Documents
+
 });
 
-if(
-!result.files ||
-!result.files.length
-){
+if(!result.files.length){
+
+showToast(
+'Tidak ada backup'
+);
+
 return;
+
 }
 
-const file =
-result.files[0];
+const latest =
+result.files
+.sort(
+(a,b)=>
+b.name.localeCompare(
+a.name
+)
+)[0];
 
 const read =
 await Capacitor.Plugins.Filesystem.readFile({
 
 path:
-file.path
+`App/DB_backup/${latest.name}`,
+
+directory:
+Capacitor.Plugins.FilesystemDirectory
+.Documents
 
 });
 
@@ -285,25 +305,9 @@ JSON.parse(
 read.data
 );
 
-const imported =
+data =
 parsed.data ||
 parsed;
-
-if(
-!imported
-){
-throw 'invalid';
-}
-if(
-!confirm(
-'Import data? Data sekarang akan diganti.'
-)
-){
-return;
-}
-
-allTxs =
-imported;
 
 saveData();
 
@@ -316,14 +320,16 @@ showToast(
 }
 catch(err){
 
-console.error(
+console.log(
 err
 );
 
 showToast(
-'Import dibatalkan'
+'Import gagal ❌'
 );
+
 }
+
 }
 
 // ── Toast ─────────────────────────────────────────────────────────────────
