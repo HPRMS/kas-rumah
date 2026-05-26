@@ -245,80 +245,106 @@ async function exportData() {
 //   e.target.value = '';
 // }
 
-async function importData(){
+async function handleImport() {
+  // Kalau di APK
+  if (window.Capacitor?.isNativePlatform?.()) {
+    try {
+      const { Filesystem } = window.Capacitor.Plugins;
 
-try{
+      // Cari semua file backup di folder KasRumah
+      const result = await Filesystem.readdir({
+        path: 'KasRumah',
+        directory: 'DOCUMENTS'
+      });
 
-const list =
-await Filesystem.readdir({
+      // Filter hanya file .json
+      const jsonFiles = result.files
+        .filter(f => (f.name || f).endsWith('.json'))
+        .map(f => f.name || f)
+        .sort()
+        .reverse(); // file terbaru di atas
 
-path:
-'App/DB_backup',
+      if (!jsonFiles.length) {
+        showToast('Tidak ada file backup di Documents/KasRumah/');
+        return;
+      }
 
-directory:
-Directory.Documents
+      // Tampilkan pilihan file ke user
+      const pilihan = await showFilePicker(jsonFiles);
+      if (!pilihan) return;
 
-});
+      // Baca isi file yang dipilih
+      const fileData = await Filesystem.readFile({
+        path: `KasRumah/${pilihan}`,
+        directory: 'DOCUMENTS',
+        encoding: 'utf8'
+      });
 
-if(!list.files.length){
+      const parsed   = JSON.parse(fileData.data);
+      const imported = parsed.data || parsed;
+      if (!Array.isArray(imported)) throw new Error('Format tidak valid');
+      if (!confirm(`Import ${imported.length} transaksi dari ${pilihan}?\nData lama akan diganti.`)) return;
 
-showToast(
-'Backup kosong'
-);
+      await Storage.replaceAll(imported);
+      allTxs = await Storage.load();
+      updateMonthOptions();
+      render();
+      showToast(`${imported.length} transaksi diimport! ✅`);
 
-return;
+    } catch (err) {
+      showToast('Gagal import: ' + err.message);
+    }
 
+  // Kalau di browser
+  } else {
+    document.getElementById('import-input').click();
+  }
 }
 
-const file =
-list.files
-.sort(
-(a,b)=>
-b.name.localeCompare(
-a.name
-)
-)[0];
+// Tampilkan modal pilih file (karena tidak ada file picker native)
+function showFilePicker(files) {
+  return new Promise(resolve => {
+    // Buat modal sederhana
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:flex-end;justify-content:center';
 
-const read =
-await Filesystem.readFile({
+    const box = document.createElement('div');
+    box.style.cssText = 'background:#1e293b;border-radius:12px 12px 0 0;padding:1.25rem;width:100%;max-width:520px;max-height:60vh;overflow-y:auto';
+    box.innerHTML = `
+      <div style="font-size:16px;font-weight:700;margin-bottom:4px">Pilih file backup</div>
+      <div style="font-size:13px;color:#94a3b8;margin-bottom:1rem">Documents/KasRumah/</div>
+      ${files.map(f => `
+        <div class="file-item" data-file="${f}" style="padding:12px;background:#334155;border-radius:8px;margin-bottom:8px;cursor:pointer;font-size:13px">
+          📄 ${f}
+        </div>`).join('')}
+      <button style="width:100%;padding:10px;background:none;border:1px solid #334155;border-radius:8px;color:#94a3b8;font-size:13px;cursor:pointer;margin-top:4px">Batal</button>
+    `;
 
-path:
-`App/DB_backup/${file.name}`,
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
 
-directory:
-Directory.Documents
+    // Klik file
+    box.querySelectorAll('.file-item').forEach(el => {
+      el.addEventListener('click', () => {
+        document.body.removeChild(overlay);
+        resolve(el.dataset.file);
+      });
+    });
 
-});
+    // Klik batal
+    box.querySelector('button').addEventListener('click', () => {
+      document.body.removeChild(overlay);
+      resolve(null);
+    });
 
-const parsed =
-JSON.parse(
-read.data
-);
-
-allTxs =
-parsed.data
-||
-parsed;
-
-saveData();
-
-renderAll();
-
-showToast(
-'Import berhasil ✅'
-);
-
-}
-catch(err){
-
-console.log(err);
-
-showToast(
-'Import gagal ❌'
-);
-
-}
-
+    // Klik overlay
+    overlay.addEventListener('click', e => {
+      if (e.target === overlay) {
+        document.body.removeChild(overlay);
+        resolve(null);
+      }
+    });
+  });
 }
 
 // ── Toast ─────────────────────────────────────────────────────────────────
