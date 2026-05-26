@@ -178,16 +178,16 @@ async function exportData() {
   const json = JSON.stringify({ version:1, exported: new Date().toISOString(), data: allTxs }, null, 2);
   const fileName = `kas-rumah-backup-${new Date().toISOString().slice(0,10)}.json`;
 
-  // Kalau jalan di Capacitor native (APK)
+  // Kalau jalan di APK (Capacitor native)
   if (window.Capacitor?.isNativePlatform?.()) {
     try {
-      const { Filesystem, Directory } = await import('https://cdn.jsdelivr.net/npm/@capacitor/filesystem@5/dist/esm/index.js');
+      const { Filesystem } = window.Capacitor.Plugins;
 
       // Pastikan folder ada
       try {
         await Filesystem.mkdir({
           path: 'KasRumah',
-          directory: Directory.Documents,
+          directory: 'DOCUMENTS',
           recursive: true
         });
       } catch(e) {} // folder sudah ada, tidak masalah
@@ -195,7 +195,7 @@ async function exportData() {
       // Tulis file
       await Filesystem.writeFile({
         path: `KasRumah/${fileName}`,
-        directory: Directory.Documents,
+        directory: 'DOCUMENTS',
         data: json,
         encoding: 'utf8'
       });
